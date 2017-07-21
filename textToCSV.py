@@ -1,42 +1,44 @@
 import time
-import re #Look up about re to use to find n occurences
 from os import listdir
 from os import walk
-import glob
+import csv
 
-path = "C:\\Users\\jvega\\Documents\\JACCJournalsData\\WebsiteToText\\JACC1984"
-
-files = walk("C:\\Users\\jvega\\Documents\\JACCJournalsData\\WebsiteToText\\JACC1984")
+#files = walk("C:\\Users\\jvega\\Documents\\JACCJournalsData\\WebsiteToText\\JACC1983")
 
 allTextFilesList = []
 
-metadataToDownload = ['citation_doi', 'citation_volume', 'citation_issue', 'citation_firstpage']
+metadataToDownload = ['\"citation_doi\"', '\"citation_volume\"', '\"citation_issue\"', '\"citation_firstpage\"']
 
-for (dirtpath, dirnames, filenames) in files:
-    #JaccFile = filenames
-    print(filenames)
-    for filename in filenames:
-        textFileList = []
-        JaccFile = open(path + "\\" + filename, "r")
-        for line in JaccFile:
-            #if("<meta" in line)
-            lineSen = ""
-            for i in range(0, len(line)):
-                if(i < len(line)):
-                    lineSen += line[i]
-                else:
-                    continue
-            print(path + "\\" + filename)
-            for meta in metadataToDownload:
-                if("<meta" + meta) in lineSen:
-                    name = ''
-                    for j in range(lineSen.index('name\"') + 6, lineSen.index('content=\"') - 2):
-                        name += lineSen[j]
-                    print(name)
-                    content = ""
-                    for k in range(lineSen.index("content=\"") + 9, lineSen.index("/>") - 2):
-                        content += lineSen[k]
-                    print(content)
 
+journal = 'BTS'
+with open((journal + 'JournalData.csv'), 'w', encoding='utf-8', newline='') as fp:
+    a = csv.writer(fp, delimiter=',')
+    a.writerow(metadataToDownload)
+    for year in range(2016, 2018):
+        path = "C:\\Users\\jvega\\Documents\\JACCJournalsData\\WebsiteToText\\" + journal + "\\" + journal
+        path += str(year)
+        print(path)
+        files = walk(path)
+        for (dirtpath, dirnames, filenames) in files:
+            print(filenames)
+            for filename in filenames:
+                JaccFile = open(path + "\\" + filename, "r", encoding='utf-8')
+                fileMetadata = []
+                print(path + "\\" + filename)
+                for line in JaccFile:
+                    for meta in metadataToDownload:
+                        if("<meta name=" + meta) in line:
+                            print(line)
+                            name = ''
+                            for j in range(line.index('name=\"') + 6, line.index('content=\"') - 2):
+                                name += line[j]
+                            print(name)
+                            content = ""
+                            for k in range(line.index("content=\"") + 9, line.index("/>") - 2):
+                                content += line[k]
+                            print(content)
+                            fileMetadata.append(content)
+                a.writerow(fileMetadata)
+fp.close()
 
 time.sleep(100)
