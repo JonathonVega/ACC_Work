@@ -16,8 +16,6 @@ def getScienceDirectLinks():
             print(links)
             if('www.sciencedirect.com' in links.get('href')):
                 scienceDirectLinks.append(links.get('href'))
-                #print(links.get('href'))
-    #print(scienceDirectLinks)
     return scienceDirectLinks
 
 # example: http://www.sciencedirect.com/science/journal/07351097/69/11/supp/S
@@ -31,14 +29,11 @@ sheetOriginal = wbOriginal.get_sheet_by_name('SCArticles')
 
 numOfRows = sheetOriginal.max_row
 numOfColumns = sheetOriginal.max_column
-#print(numOfColumns)
 
 filepath = 'C:\\Users\\jvega\\Documents\\PythonScripts\\SCAAONew.xlsx'
 wbNew = openpyxl.Workbook()
 wbNew.save(filepath)
 
-
-#sheetNew = wbNew.get_sheet_by_name('Sheet')
 wbNew = openpyxl.load_workbook('SCAAONew.xlsx')
 sheetNew = wbNew.get_sheet_by_name('Sheet')
 
@@ -54,24 +49,18 @@ for link in SDLinksList:
     print('Volume is:' + volume + '.')
     print('Issue is:' + issue + '.')
     for originalRow in range(2,sheetOriginal.max_row):
-        #if(str(sheetOriginal.cell(row=originalRow, column=5).value) == '67'):
-            #print(sheetOriginal.cell(row=originalRow, column=5).value)
-            #print(sheetOriginal.cell(row=originalRow, column=6).value)
-            #time.sleep(.1)
         if(str(sheetOriginal.cell(row=originalRow, column=5).value) == volume and str(sheetOriginal.cell(row=originalRow, column=6).value) == issue):
             nextNewRow = sheetNew.max_row + 1
             print('FOUND ONE!!!')
-            time.sleep(10)
             for column in range(1,8):
-                sheetNew.cell(row=nextNewRow, column=column).value = sheetOriginal.cell(row=originalRow, column=column).value
-                wbNew.save('SCAAONew.xlsx')
+                if(column == 7):
+                    sheetNew.cell(row=nextNewRow, column=column).value = '=CONCATENATE({},"-",{})'.format(str(sheetOriginal.cell(row=originalRow, column=5).value),str(sheetOriginal.cell(row=originalRow, column=6).value))
+                    wbNew.save('SCAAONew.xlsx')
+                else:
+                    sheetNew.cell(row=nextNewRow, column=column).value = sheetOriginal.cell(row=originalRow, column=column).value
+                    wbNew.save('SCAAONew.xlsx')
 
 wbNew.save('SCAAONew.xlsx')
 print('We done?')
-
-
-
-
-
 
 time.sleep(10)
