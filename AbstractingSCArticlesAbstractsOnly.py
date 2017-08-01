@@ -22,45 +22,57 @@ def getScienceDirectLinks():
 SDLinksList = getScienceDirectLinks()
 print(SDLinksList)
 print("cool")
-wbOriginal = openpyxl.load_workbook('SCArticlesAbstractsOnly.xlsx')
+wbOG = openpyxl.load_workbook('SCArticlesAbstractsOnly.xlsx')
 
-print(wbOriginal.get_sheet_names())
-sheetOriginal = wbOriginal.get_sheet_by_name('SCArticles')
+print(wbOG.get_sheet_names())
+sheetOG = wbOG.get_sheet_by_name('SCArticles')
 
-numOfRows = sheetOriginal.max_row
-numOfColumns = sheetOriginal.max_column
+numOfRows = sheetOG.max_row
+numOfColumns = sheetOG.max_column
 
-filepath = 'C:\\Users\\jvega\\Documents\\PythonScripts\\SCAAONew.xlsx'
+filepath = 'C:\\Users\\jvega\\Documents\\PythonScripts\\FilteredSCArticlesAbstractsOnly.xlsx'
 wbNew = openpyxl.Workbook()
 wbNew.save(filepath)
 
-wbNew = openpyxl.load_workbook('SCAAONew.xlsx')
+wbNew = openpyxl.load_workbook('FilteredSCArticlesAbstractsOnly.xlsx')
 sheetNew = wbNew.get_sheet_by_name('Sheet')
+sheetNew.title = 'SCArticles'
+
+wbNew.create_sheet('SCArticlesCount')
+sheetNewCount = wbNew.get_sheet_by_name('SCArticlesCount')
 
 for column in range(1, numOfColumns + 1):
-    sheetNew.cell(row=1, column=column).value = sheetOriginal.cell(row=1, column=column).value
+    sheetNew.cell(row=1, column=column).value = sheetOG.cell(row=1, column=column).value
 
-wbNew.save('SCAAONew.xlsx')
+wbNew.save('FilteredSCArticlesAbstractsOnly.xlsx')
 
+countRow = 1
 for link in SDLinksList:
     VI = link[link.index('/journal/') + 18: link.index('/supp')]
     volume = VI[:VI.index('/')]
     issue = VI[VI.index('/') + 1:]
+    articlesInIssue = 0
     print('Volume is:' + volume + '.')
     print('Issue is:' + issue + '.')
-    for originalRow in range(2,sheetOriginal.max_row):
-        if(str(sheetOriginal.cell(row=originalRow, column=5).value) == volume and str(sheetOriginal.cell(row=originalRow, column=6).value) == issue):
+    for originalRow in range(2,sheetOG.max_row):
+        if(str(sheetOG.cell(row=originalRow, column=5).value) == volume and str(sheetOG.cell(row=originalRow, column=6).value) == issue):
             nextNewRow = sheetNew.max_row + 1
+            articlesInIssue += 1
             print('FOUND ONE!!!')
             for column in range(1,8):
                 if(column == 7):
-                    sheetNew.cell(row=nextNewRow, column=column).value = '=CONCATENATE({},"-",{})'.format(str(sheetOriginal.cell(row=originalRow, column=5).value),str(sheetOriginal.cell(row=originalRow, column=6).value))
-                    wbNew.save('SCAAONew.xlsx')
+                    key = '=CONCATENATE({},"-",{})'.format(str(sheetOG.cell(row=originalRow, column=5).value),str(sheetOG.cell(row=originalRow, column=6).value))
+                    sheetNew.cell(row=nextNewRow, column=column).value = key
+                    sheetNewCount.cell(row=countRow, column=1).value = key
+                    sheetNewCount.cell(row=countRow, column=2).value = articlesInIssue
+                    wbNew.save('FilteredSCArticlesAbstractsOnly.xlsx')
                 else:
-                    sheetNew.cell(row=nextNewRow, column=column).value = sheetOriginal.cell(row=originalRow, column=column).value
-                    wbNew.save('SCAAONew.xlsx')
+                    sheetNew.cell(row=nextNewRow, column=column).value = sheetOG.cell(row=originalRow, column=column).value
+                    wbNew.save('FilteredSCArticlesAbstractsOnly.xlsx')
+    countRow += 1
 
-wbNew.save('SCAAONew.xlsx')
+wbNew.save('FilteredSCArticlesAbstractsOnly.xlsx')
+
 print('We done?')
 
 time.sleep(10)
