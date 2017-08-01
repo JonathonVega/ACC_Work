@@ -40,13 +40,16 @@ sheetNew.title = 'SCArticles'
 
 wbNew.create_sheet('SCArticlesCount')
 sheetNewCount = wbNew.get_sheet_by_name('SCArticlesCount')
+sheetNewCount.cell(row=1, column=1).value = 'Row Labels'
+sheetNewCount.cell(row=1, column=2).value = 'Count of key'
 
+# Set Titles in SCArticles sheet
 for column in range(1, numOfColumns + 1):
     sheetNew.cell(row=1, column=column).value = sheetOG.cell(row=1, column=column).value
 
 wbNew.save('FilteredSCArticlesAbstractsOnly.xlsx')
 
-countRow = 1
+countRow = 2
 for link in SDLinksList:
     VI = link[link.index('/journal/') + 18: link.index('/supp')]
     volume = VI[:VI.index('/')]
@@ -69,6 +72,9 @@ for link in SDLinksList:
                 else:
                     sheetNew.cell(row=nextNewRow, column=column).value = sheetOG.cell(row=originalRow, column=column).value
                     wbNew.save('FilteredSCArticlesAbstractsOnly.xlsx')
+    if(articlesInIssue == 0):
+        sheetNewCount.cell(row=countRow, column=1).value = '=CONCATENATE({},"-",{})'.format(volume,issue)
+        sheetNewCount.cell(row=countRow, column=2).value = articlesInIssue
     countRow += 1
 
 wbNew.save('FilteredSCArticlesAbstractsOnly.xlsx')
