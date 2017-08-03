@@ -18,6 +18,11 @@ def getScienceDirectLinks():
                 scienceDirectLinks.append(links.get('href'))
     return scienceDirectLinks
 
+#def getIssueSupplementName(link):
+    #VI = link[link.index('/journal/') + 18:]
+    #issue = VI[VI.index('/') + 1:].replace('/supp/', '_')
+    #if(issue.index('_'))
+
 # example: http://www.sciencedirect.com/science/journal/07351097/69/11/supp/S
 SDLinksList = getScienceDirectLinks()
 print(SDLinksList)
@@ -30,11 +35,11 @@ sheetOG = wbOG.get_sheet_by_name('SCArticles')
 numOfRows = sheetOG.max_row
 numOfColumns = sheetOG.max_column
 
-filepath = 'C:\\Users\\jvega\\Documents\\PythonScripts\\FilteredSCArticlesAbstractsOnly.xlsx'
+filepath = 'C:\\Users\\jvega\\Documents\\PythonScripts\\FilteredSCArticlesAbstractsOnly_S.xlsx'
 wbNew = openpyxl.Workbook()
 wbNew.save(filepath)
 
-wbNew = openpyxl.load_workbook('FilteredSCArticlesAbstractsOnly.xlsx')
+wbNew = openpyxl.load_workbook('FilteredSCArticlesAbstractsOnly_S.xlsx')
 sheetNew = wbNew.get_sheet_by_name('Sheet')
 sheetNew.title = 'SCArticles'
 
@@ -47,18 +52,21 @@ sheetNewCount.cell(row=1, column=2).value = 'Count of key'
 for column in range(1, numOfColumns + 1):
     sheetNew.cell(row=1, column=column).value = sheetOG.cell(row=1, column=column).value
 
-wbNew.save('FilteredSCArticlesAbstractsOnly.xlsx')
+wbNew.save('FilteredSCArticlesAbstractsOnly_S.xlsx')
 
 countRow = 2
 for link in SDLinksList:
-    VI = link[link.index('/journal/') + 18: link.index('/supp')]
+    VI = link[link.index('/journal/') + 18:link.index('/supp')]
     volume = VI[:VI.index('/')]
     issue = VI[VI.index('/') + 1:]
-    articlesInIssue = 0
     print('Volume is:' + volume + '.')
     print('Issue is:' + issue + '.')
+    articlesInIssue = 0
     for originalRow in range(2,sheetOG.max_row):
-        if(str(sheetOG.cell(row=originalRow, column=5).value) == volume and str(sheetOG.cell(row=originalRow, column=6).value) == issue):
+        if(str(sheetOG.cell(row=originalRow, column=5).value) == volume and (issue in str(sheetOG.cell(row=originalRow, column=6).value) and ('s' in str(sheetOG.cell(row=originalRow, column=6).value) or 'S' in str(sheetOG.cell(row=originalRow, column=6).value) ))):
+            issue = str(sheetOG.cell(row=originalRow, column=6).value)
+            print('Volume is:' + volume + '.')
+            print('Issue is:' + issue + '.')
             nextNewRow = sheetNew.max_row + 1
             articlesInIssue += 1
             print('FOUND ONE!!!')
@@ -68,17 +76,17 @@ for link in SDLinksList:
                     sheetNew.cell(row=nextNewRow, column=column).value = key
                     sheetNewCount.cell(row=countRow, column=1).value = key
                     sheetNewCount.cell(row=countRow, column=2).value = articlesInIssue
-                    wbNew.save('FilteredSCArticlesAbstractsOnly.xlsx')
+                    wbNew.save('FilteredSCArticlesAbstractsOnly_S.xlsx')
                 else:
                     sheetNew.cell(row=nextNewRow, column=column).value = sheetOG.cell(row=originalRow, column=column).value
-                    wbNew.save('FilteredSCArticlesAbstractsOnly.xlsx')
+                    wbNew.save('FilteredSCArticlesAbstractsOnly_S.xlsx')
     if(articlesInIssue == 0):
         sheetNewCount.cell(row=countRow, column=1).value = '=CONCATENATE({},"-",{})'.format(volume,issue)
         sheetNewCount.cell(row=countRow, column=2).value = articlesInIssue
     countRow += 1
 
-wbNew.save('FilteredSCArticlesAbstractsOnly.xlsx')
+wbNew.save('FilteredSCArticlesAbstractsOnly_S.xlsx')
 
-print('We done?')
+print('Finished!')
 
 time.sleep(10)
