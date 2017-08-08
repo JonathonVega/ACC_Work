@@ -6,15 +6,10 @@ from requests.auth import HTTPBasicAuth
 import time
 
 JACCJournal = {"JACC": "http://www.onlinejacc.org"}
-
 INTJournal = {"INT":"http://www.interventions.onlinejacc.org"}
-
 BTSJournal = {"BTS": "http://www.basictranslational.onlinejacc.org"}
-
 IMGJournal = {"IMG": "http://www.imaging.onlinejacc.org"}
-
 EPJournal = {"EP": "http://www.electrophysiology.onlinejacc.org"}
-
 HFJournal = {"HF": "http://www.heartfailure.onlinejacc.org"}
 
 otherJournals = {"BTS": "http://www.basictranslational.onlinejacc.org",
@@ -28,6 +23,8 @@ JACCJournals = {"JACC": "http://www.onlinejacc.org",
 "INT": "http://www.interventions.onlinejacc.org",
 "EP": "http://www.electrophysiology.onlinejacc.org",
 "HF": "http://www.heartfailure.onlinejacc.org"}
+
+skipArticlesList = ['/content/48/5/e247', '/content/50/7/e1', '/content/52/13/e1', '/content/48/4/e149', '/content/48/3/e1','/content/50/17/e159', '/content/61/23/e179', '/content/60/24/e44', '/content/58/24/e123'] #The links to these pages don't work
 
 def getArchive(journalLink):
     r = requests.get(journalLink + "/content/by/year")
@@ -65,10 +62,10 @@ def getDataTitlesList(metaData):
     return dataTitles
 
 def skipArticle(article): # Should only be used when you want to skip to an issue
-    if "content/68" in article:
-        return True
-    else:
+    if "content/4/2/" in article or "content/4/1/" in article:
         return False
+    else:
+        return True
 
 def restrictedArticleSourceToTxt(articleLink, JLink):
     with requests.Session() as c:
@@ -104,24 +101,37 @@ def stoppedRunning(articleLink):
             stoppedRunning = True
     return stoppedRunning
 
-#allMeta = []
-for key in JACCJournal:
-    soup = getArchive(JACCJournals[key])
-    years = ["2016"]
-    for year in years: #soup.find_all("li", {"class": ["year active even", "year active odd"]}): #soup.find_all("li", {"class": ["year even", "year odd", "year active even", "year active odd", "year last even", "year first odd" ]}):
-        #print(year.string)
-        issues = getIssues(year, JACCJournals[key])
-        for issue in issues:
-            articles = getArticles(issue, JACCJournals[key])
-            for article in articles:
-                if skipArticle(article):
-                    print(article)
-                    #time.sleep(2)
-                    continue
-                elif (year == "2016" or year == "2017") and (key == "JACC" or key == "IMG" or key == "INT" or key == "EP" or key == "HF"):
-                    restrictedArticleSourceToTxt(article, JACCJournals[key])
-                else:
-                    openArticleSourceToTxt(article, JACCJournals[key])
+
+# Instructions for the user
+print('!!!Make sure this script is inside the folder that you want all the article\'s source code in. Otherwise you\'ll have hundreds of files somewhere that you don\'t want them in. I\'d recommend copying and pasting this program into the folder you want the article\'s source pages in.!!!\n')
+print('JACC - Journal of American College of Cardiology\nBTS - Basic to Translational Science\nIMG - Cardiovascular Imaging\nINT - Cardiovascular Interventions\nEP - Clinical Electrophysiology\nHF - Heart Failure')
+journal = input('Please choose the journal you\'d like to update: ')
+journal = journal.upper()
+
+# This block was made to make sure the right journal is chosen
+while(journal != 'JACC' or journal != 'BTS' or journal != 'IMG' or journal != 'INT' or journal != 'EP' or journal != 'HF'):
+    journal = input('Please choose a valid journal: ')
+    journal = journal.upper()
+    if(journal in JACCJournals):
+        break
+    else:
+        continue
+
+print(journal)
+soup = getArchive(JACCJournals[journal])
+year = input('What year you would like to update\nExample:\"2017\"\nChoose your Year: ')
+issues = getIssues(year, JACCJournals[key])
+for issue in issues:
+    articles = getArticles(issue, JACCJournals[key])
+    for article in articles:
+        if skipArticle(article):
+            continue
+        if stoppedRunning(article):
+            continue
+        elif (year == "2016" or year == "2017") and (key == "JACC" or key == "IMG" or key == "INT" or key == "EP" or key == "HF"):
+            restrictedArticleSourceToTxt(article, JACCJournals[key])
+        else:
+            openArticleSourceToTxt(article, JACCJournals[key])
 
 
 
