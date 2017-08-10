@@ -10,6 +10,12 @@ journals = ['JACC', 'INT', 'IMG', 'BTS', 'EP', 'HF']
 #This program should be grouped with the folders that contain the different jacc journals data. It shouldn\'t be in a specific jacc journal folder or a specific year of a jacc journal folder.
 print('!!!This program should be grouped with the folders that contain the different jacc journals data. It shouldn\'t be in a specific jacc journal folder or a specific year of a jacc journal folder.!!!')
 print('!!!You may need to change the code in this base on what you want to get out of the text files!!!')
+
+print('This program will retrieve the metadata: ')
+for title in metadataToDownload:
+    print(title)
+print('\n')
+
 print('JACC - Journal of American College of Cardiology\nBTS - Basic to Translational Science\nIMG - Cardiovascular Imaging\nINT - Cardiovascular Interventions\nEP - Clinical Electrophysiology\nHF - Heart Failure\n')
 journal = ''
 
@@ -21,6 +27,7 @@ while(journal != 'JACC' or journal != 'BTS' or journal != 'IMG' or journal != 'I
     else:
         print("Invalid Response\n")
         continue
+
 
 with open((journal + 'JournalData.csv'), 'w', encoding='utf-8', newline='') as fp: #Creates a new csv under the journal name you created
     a = csv.writer(fp, delimiter=',')
