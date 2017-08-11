@@ -41,6 +41,12 @@ def isArticleRelatedToIssue(issueLink, href):
     else:
         return False
 
+def getIssueLink(issueURL):
+    issueLinkFirstIndex = issueURL.index('/content/')
+    issueLink = issueURL[issueLinkFirstIndex:]
+    print(issueLink)
+    return issueLink
+
 # Returns a list of articles from the selected issue from the chosen Journal
 def getArticles(issueLink, JLink):
     issueSoup = BeautifulSoup((requests.get(JLink + issueLink)).text, 'lxml')
@@ -51,8 +57,18 @@ def getArticles(issueLink, JLink):
             print(article.get("href"))
     return articlesList
 
+def getArticles(issueURL):
+    issueSoup = BeautifulSoup((requests.get(issueURL)).text, 'lxml')
+    articlesList = []
+    issueLink = getIssueLink(issueURL)
+    for article in issueSoup.find_all("a", {"class": "highwire-cite-linked-title"}):
+        if isArticleRelatedToIssue(issueLink, article.get("href")):
+            articlesList.append(article.get("href"))
+            print(article.get("href"))
+    return articlesList
+
 # This block should only be used when you don't want the script to download certain articles in issues
-# Shouldn't be used at all unless you need to skip or get certain articles without having the script to read the all the issues in that year
+# Shouldn't be used at all unless you need to skip or get certain articles without having the script to read all the issues in that year
 def skipArticle(article):
     if "content/4/2/" in article or "content/4/1/" in article:
         return True
@@ -98,28 +114,69 @@ def stoppedRunning(articleLink):
             stoppedRunning = True
     return stoppedRunning
 
+def getJournalName(issueURL):
+    if('www.basictranslational.onlinejacc.org' in issueURL):
+        return 'BTS'
+    elif('www.imaging.onlinejacc.org' in issueURL):
+        return 'IMG'
+    elif('www.interventions.onlinejacc.org' in issueURL):
+        return 'INT'
+    elif('www.electrophysiology.onlinejacc.org' in issueURL):
+        return 'EP'
+    elif('www.heartfailure.onlinejacc.org' in issueURL):
+        return 'HF'
+    else:
+        return 'JACC'
+
 
 # Instructions for the user
 print('!!!Make sure this script is inside the folder that you want all the article\'s source code in. Otherwise you\'ll have hundreds of files somewhere that you don\'t want them in. I\'d recommend copying and pasting this program into the folder you want the article\'s source pages in.!!!\n!!!Also make sure that your JACC username and JACC password are in this script in the method \'restrictedArticleSourceToTxt\' so that the program is able to access the restricted content.!!!\n')
 print('JACC - Journal of American College of Cardiology\nBTS - Basic to Translational Science\nIMG - Cardiovascular Imaging\nINT - Cardiovascular Interventions\nEP - Clinical Electrophysiology\nHF - Heart Failure')
-journal = input('Please choose the journal you\'d like to update: ')
-journal = journal.upper()
-
-# This block was made to make sure a valid journal is chosen by the user
-while(journal != 'JACC' or journal != 'BTS' or journal != 'IMG' or journal != 'INT' or journal != 'EP' or journal != 'HF'):
-    journal = input('Please choose a valid journal: ')
-    journal = journal.upper()
-    if(journal in JACCJournals):
+journal = ''
+option = ''
+while(option != 'YEAR' or option != 'URL'):
+    option = input('Would you like to download the source pages from a certain \'year\' or you would you like to download from a \'url\'\nPlease choose \'year\' or \'url\': ')
+    option = option.upper()
+    if(option == 'YEAR'):
+        break
+    elif(option == 'URL'):
         break
     else:
+        print('Invalid Response!\n')
         continue
 
-print(journal)
-archiveSoup = getArchive(JACCJournals[journal]) #Reads the journal's archive source page
-year = input('What year you would like to update\nExample:\"2017\"\nChoose your Year: ')
-issuesList = getIssues(year, JACCJournals[journal])
-for issue in issuesList:
-    articlesList = getArticles(issue, JACCJournals[journal])
+if(option == 'YEAR'):
+    # This block was made to make sure a valid journal is chosen by the user
+    while(journal != 'JACC' or journal != 'BTS' or journal != 'IMG' or journal != 'INT' or journal != 'EP' or journal != 'HF'):
+        journal = input('Please choose the journal you\'d like to update: ')
+        journal = journal.upper()
+        if(journal in JACCJournals):
+            break
+        else:
+            print("Invalid Response!\n")
+            continue
+    print(journal)
+    archiveSoup = getArchive(JACCJournals[journal]) #Reads the journal's archive source page
+    year = input('What year you would like to update\nExample:\"2017\"\nChoose your Year: ')
+    issuesList = getIssues(year, JACCJournals[journal])
+    for issue in issuesList:
+        articlesList = getArticles(issue, JACCJournals[journal])
+        for article in articlesList:
+            now = datetime.datetime.now()
+            print(now.year)
+            print(int(now.year))
+            if skipArticle(article):
+                continue
+            if stoppedRunning(article):
+                continue
+            elif (year == str((int(now.year) - 1)) or year == str(now.year)) and (journal == "JACC" or journal == "IMG" or journal == "INT" or journal == "EP" or journal == "HF"):
+                restrictedArticleSourceToTxt(article, JACCJournals[journal])
+            else:
+                openArticleSourceToTxt(article, JACCJournals[journal])
+else:
+    issueURL = input('Please paste or type in the url of an issue you wish to download articles from: ')
+    articlesList = getArticles(issueURL)
+    journal = getJournalName(issueURL)
     for article in articlesList:
         now = datetime.datetime.now()
         print(now.year)
@@ -128,7 +185,5 @@ for issue in issuesList:
             continue
         if stoppedRunning(article):
             continue
-        elif (year == str((int(now.year) - 1)) or year == str(now.year)) and (journal == "JACC" or journal == "IMG" or journal == "INT" or journal == "EP" or journal == "HF"):
-            restrictedArticleSourceToTxt(article, JACCJournals[journal])
         else:
-            openArticleSourceToTxt(article, JACCJournals[journal])
+            restrictedArticleSourceToTxt(article, JACCJournals[journal])
